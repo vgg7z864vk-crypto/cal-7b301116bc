@@ -49,3 +49,4 @@ const VTZ=['BEGIN:VTIMEZONE','TZID:America/Los_Angeles','BEGIN:DAYLIGHT','TZOFFS
 const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Daybreak//Planner//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:Daybreak','X-WR-TIMEZONE:America/Los_Angeles','REFRESH-INTERVAL;VALUE=DURATION:PT1H','X-PUBLISHED-TTL:PT1H',VTZ,...ev,'END:VCALENDAR'].join('\r\n')+'\r\n';
 fs.writeFileSync(outPath,ics);
 console.log(`Daybreak feed: ${ev.length} events, ${from} to ${k.addDays(from,days-1)}, ${Object.keys(loaded).length} saved docs loaded`);
+process.exit(0);
