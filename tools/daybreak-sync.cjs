@@ -6,7 +6,7 @@ const [,,htmlPath,dbDir,outPath,weeksArg]=process.argv;
 const WEEKS=+weeksArg||8;
 let html=fs.readFileSync(htmlPath,'utf8');
 let js=html.match(/<script>([\s\S]*?)<\/script>/)[1];
-js=js.replace(/\}\)\(\);\s*$/,'window.__k={dayType,workoutStart,duration,weekGoals,dayFrame,isPrepDay,TYPES,S,weekIdx,dowIdx,longFor,isVac,isCall,isFlex,menuFor,MENUS,OPT,PREP_MIN,addDays,toMin,schedFor,weekInfo,easyMiles,START,__load:(o)=>{Object.assign(docs,o);invalidate();}};\n})();');
+js=js.replace(/\}\)\(\);\s*$/,'window.__k={readyBlock,dayType,workoutStart,duration,weekGoals,dayFrame,isPrepDay,TYPES,S,weekIdx,dowIdx,longFor,isVac,isCall,isFlex,menuFor,MENUS,OPT,PREP_MIN,addDays,toMin,schedFor,weekInfo,easyMiles,START,__load:(o)=>{Object.assign(docs,o);invalidate();}};\n})();');
 const dom=new JSDOM('<!doctype html><body>'+html.replace(/<script>[\s\S]*?<\/script>/,'')+'</body>',{runScripts:"outside-only",url:"https://x.test/"});
 const w=dom.window; w.scrollTo=()=>{};
 w.eval(js); const k=w.__k;
@@ -42,7 +42,7 @@ for(let i=0;i<days;i++){
   gb.forEach((b,j)=>{const g=st.goals.find(x=>x.id===b.g);if(g)add(ds,`goal${j}`,b.a,b.b,g.name,g.notes||'',5);});
   k.dayFrame(ds).prot.forEach((p,j)=>{ if(p.kind==='off'||p.kind==='free') add(ds,`prot${j}`,p.a,p.b,p.label,'Protected time. Nothing scheduled on purpose.',0); });
   const sc=k.schedFor(ds);
-  if(sc.work&&!k.isVac(ds)){const s0=k.toMin(sc.start),gr=s0-st.sched.ready,lv=s0-st.sched.commute; add(ds,'ready',gr,lv,`Shower + get ready · leave by ${fmt(lv)}`,`Shower, dress, breakfast. ${st.sched.commute} min drive to work.`,10);}
+  {const rb=k.readyBlock(ds); if(rb){const lv=sc.work?k.toMin(sc.start)-st.sched.commute:null; add(ds,'ready',rb[0],rb[1],`Shower + get ready${lv?` · leave by ${fmt(lv)}`:""}`,`Shower, dress, breakfast.${lv?` ${st.sched.commute} min drive to work.`:""}`,10);}}
   const bed=k.toMin(st.sched.bed); add(ds,'wind',bed-60,bed,`Wind down · read, meditate, lights out ${fmt(bed)}`,'Screens off. 10 pages and 10 minutes of meditation.',0);
 }
 const VTZ=['BEGIN:VTIMEZONE','TZID:America/Los_Angeles','BEGIN:DAYLIGHT','TZOFFSETFROM:-0800','TZOFFSETTO:-0700','TZNAME:PDT','DTSTART:19700308T020000','RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU','END:DAYLIGHT','BEGIN:STANDARD','TZOFFSETFROM:-0700','TZOFFSETTO:-0800','TZNAME:PST','DTSTART:19701101T020000','RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU','END:STANDARD','END:VTIMEZONE'].join('\r\n');
