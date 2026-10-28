@@ -6,7 +6,7 @@ const [,,htmlPath,dbDir,outPath,weeksArg]=process.argv;
 const WEEKS=+weeksArg||8;
 let html=fs.readFileSync(htmlPath,'utf8');
 let js=html.match(/<script>([\s\S]*?)<\/script>/)[1];
-js=js.replace(/\}\)\(\);\s*$/,'window.__k={readyBlock,dayType,workoutStart,duration,weekGoals,dayFrame,isPrepDay,TYPES,S,weekIdx,dowIdx,longFor,isVac,isCall,isFlex,menuFor,MENUS,OPT,PREP_MIN,addDays,toMin,schedFor,weekInfo,easyMiles,START,__load:(o)=>{Object.assign(docs,o);invalidate();}};\n})();');
+js=js.replace(/\}\)\(\);\s*$/,'window.__k={TRIAL:(typeof TRIAL!=="undefined"?TRIAL:null),isTrial:(typeof isTrial!=="undefined"?isTrial:()=>false),readyBlock,dayType,workoutStart,duration,weekGoals,dayFrame,isPrepDay,TYPES,S,weekIdx,dowIdx,longFor,isVac,isCall,isFlex,menuFor,MENUS,OPT,PREP_MIN,addDays,toMin,schedFor,weekInfo,easyMiles,START,__load:(o)=>{Object.assign(docs,o);invalidate();}};\n})();');
 const dom=new JSDOM('<!doctype html><body>'+html.replace(/<script>[\s\S]*?<\/script>/,'')+'</body>',{runScripts:"outside-only",url:"https://x.test/"});
 const w=dom.window; w.scrollTo=()=>{};
 w.eval(js); const k=w.__k;
@@ -25,10 +25,11 @@ const ev=[];
 const add=(ds,key,a,b,title,desc,alarm)=>{ev.push(['BEGIN:VEVENT',`UID:daybreak-${ds}-${key}@daybreak.app`,`DTSTAMP:${stamp}`,`LAST-MODIFIED:${stamp}`,`DTSTART;TZID=America/Los_Angeles:${loc(ds,a)}`,`DTEND;TZID=America/Los_Angeles:${loc(ds,b)}`,`SUMMARY:${escI(title)}`,desc?`DESCRIPTION:${escI(desc)}`:null,alarm?['BEGIN:VALARM','ACTION:DISPLAY',`DESCRIPTION:${escI(title)}`,`TRIGGER:-PT${alarm}M`,'END:VALARM'].join('\r\n'):null,'END:VEVENT'].filter(Boolean).join('\r\n'));};
 const st=k.S();
 const today=`${now.toLocaleString('en-CA',{timeZone:'America/Los_Angeles'}).slice(0,10)}`;
-let from=k.addDays(today,-7); if(from<k.START) from=k.START;
+let from=k.addDays(today,-7); if(from<k.START) from=(k.TRIAL&&today<=k.TRIAL[1]&&k.TRIAL[0]<k.START)?(k.TRIAL[0]>from?k.TRIAL[0]:from):k.START;
 const days=Math.round((Date.parse(k.addDays(today,WEEKS*7))-Date.parse(from))/864e5);
 for(let i=0;i<days;i++){
   const ds=k.addDays(from,i);
+  if(ds<k.START&&!k.isTrial(ds)) continue;
   const t=k.dayType(ds), T=k.TYPES[t];
   if(!k.isVac(ds)&&t!=='rest'){
     const a=k.workoutStart(ds), dur=k.duration(t,ds);
@@ -37,6 +38,7 @@ for(let i=0;i<days;i++){
     if(t==='easy'){const wk=k.weekInfo(k.weekIdx(ds));title=`Easy run ${k.easyMiles(wk)} mi (or 45 min Zone 2 ride)`;}
     add(ds,'workout',a,a+dur,title,'Open Daybreak and tap Start workout.',10);
   }
+  if(ds<k.START) continue; // test-drive days: workout only
   if(k.isPrepDay(ds)){const m=k.menuFor(k.weekIdx(ds)+1);add(ds,'prep',900,900+k.PREP_MIN[m],`Meal prep · Menu ${m}`,`${k.OPT[k.MENUS[m].lunch].n} + ${k.OPT[k.MENUS[m].dinner].n}. Recipes and grocery list in Daybreak.`,30);}
   const gb=k.weekGoals(k.weekIdx(ds)).days[k.dowIdx(ds)].blocks;
   gb.forEach((b,j)=>{const g=st.goals.find(x=>x.id===b.g);if(g)add(ds,`goal${j}`,b.a,b.b,g.name,g.notes||'',5);});
