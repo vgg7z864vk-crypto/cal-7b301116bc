@@ -41,7 +41,7 @@ for(let i=0;i<days;i++){
   if(ds<k.START) continue; // test-drive days: workout only
   if(k.isPrepDay(ds)){const m=k.menuFor(k.weekIdx(ds)+1);add(ds,'prep',900,900+k.PREP_MIN[m],`Meal prep · Menu ${m}`,`${k.OPT[k.MENUS[m].lunch].n} + ${k.OPT[k.MENUS[m].dinner].n}. Recipes and grocery list in Daybreak.`,30);}
   const gb=k.weekGoals(k.weekIdx(ds)).days[k.dowIdx(ds)].blocks;
-  gb.forEach((b,j)=>{const g=st.goals.find(x=>x.id===b.g);if(g)add(ds,`goal${j}`,b.a,b.b,g.name,g.notes||'',5);});
+  gb.forEach((b,j)=>{const g=st.goals.find(x=>x.id===b.g);if(g)add(ds,`goal${j}`,b.a,b.b,b.gap?`${g.name} (between patients)`:g.name,b.gap?`${b.b-b.a} min whenever a gap between patients opens. ${g.notes||''}`:(g.notes||''),b.gap?0:5);});
   k.dayFrame(ds).prot.forEach((p,j)=>{ if(p.kind==='off'||p.kind==='free') add(ds,`prot${j}`,p.a,p.b,p.label,'Protected time. Nothing scheduled on purpose.',0); });
   const sc=k.schedFor(ds);
   {const rb=k.readyBlock(ds); if(rb){const lv=sc.work?k.toMin(sc.start)-st.sched.commute:null; add(ds,'ready',rb[0],rb[1],`Shower + get ready${lv?` · leave by ${fmt(lv)}`:""}`,`Shower, dress, breakfast.${lv?` ${st.sched.commute} min drive to work.`:""}`,10);}}
